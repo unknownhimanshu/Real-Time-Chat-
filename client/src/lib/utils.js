@@ -5,3 +5,14 @@ export function formatMessageTime(date){
         hour12: false,
     })
 }
+
+export function getMessageStatusLabel(status){
+    switch (status) {
+        case "read":
+            return "Read";
+        case "delivered":
+            return "Delivered";
+        default:
+            return "Sent";
+    }
+}

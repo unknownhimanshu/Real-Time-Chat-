@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  fullName   String
+  password   String
+  profilePic String?  @default("")
+  bio        String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  friends         User[]   @relation("UserFriends")
+  friendsRelation User[]   @relation("UserFriends")
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  sentFriendRequests     FriendRequest[] @relation("SentRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedRequests")
+
+  createdGroups Group[]   @relation("GroupCreator")
+  adminGroups   Group[]   @relation("GroupAdmins")
+  memberGroups  Group[]   @relation("GroupMembers")
+
+  deletedMessages Message[] @relation("MessageDeletedBy")
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @default("")
+  avatar      String?  @default("")
+  inviteToken String   @unique
+  createdById String
+  createdBy   User     @relation("GroupCreator", fields: [createdById], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  admins  User[] @relation("GroupAdmins")
+  members User[] @relation("GroupMembers")
+
+  messages Message[] @relation("GroupMessages")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  senderId       String
+  receiverId     String?
+  groupId        String?
+  chatType       String   @default("personal")
+  conversationKey String
+  text           String?
+  image          String?
+  attachments    Json?    @default("[]")
+  status         String   @default("sent")
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  editedAt       DateTime?
+  deletedForEveryone Boolean @default(false)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  sender    User    @relation("SentMessages", fields: [senderId], references: [id])
+  receiver  User?   @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  group     Group?  @relation("GroupMessages", fields: [groupId], references: [id])
+  deletedBy User[]  @relation("MessageDeletedBy")
+
+  @@index([conversationKey, createdAt, id])
+  @@index([receiverId, status, createdAt])
+  @@index([groupId, createdAt, id])
+}
+
+model FriendRequest {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     String   @default("pending")
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("SentRequests", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+}

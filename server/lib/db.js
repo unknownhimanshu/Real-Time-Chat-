@@ -1,10 +1,13 @@
-import mongoose from "mongoose";
+import { PrismaClient } from "@prisma/client";
 
-// Function to connect to the mongodb database
-export const connectDB = async () =>{
+export const prisma = new PrismaClient({
+    datasourceUrl: process.env.DATABASE_URL,
+});
+
+export const connectDB = async () => {
     try {
-        mongoose.connection.on('connected', ()=> console.log('Database Connected'));
-       await mongoose.connect(`${process.env.MONGODB_URI}/chat-app`) 
+        await prisma.$connect();
+        console.log('Database Connected (PostgreSQL via Prisma)');
     } catch (error) {
         console.log(error);
     }
